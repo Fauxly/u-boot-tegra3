@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       defconfig:
-        description: "U-Boot defconfig (например: tf300t_defconfig, qemu_arm_defconfig, etc.)"
+        description: "transformer_t30_defconfig"
         required: true
         default: "qemu_arm_defconfig"
       arch:
