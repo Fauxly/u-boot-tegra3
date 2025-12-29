@@ -1,4 +1,4 @@
-name: Build U-Boot
+name: Build U-Boot (Transformer T30)
 
 on:
   push:
@@ -6,70 +6,75 @@ on:
   workflow_dispatch:
     inputs:
       defconfig:
-        description: "transformer_t30_defconfig"
-        required: true
+        description: "U-Boot defconfig"
+        required: false
         default: "transformer_t30_defconfig"
       arch:
         description: "ARCH"
-        required: true
+        required: false
         default: "arm"
       cross:
         description: "Cross-compiler prefix"
-        required: true
+        required: false
         default: "arm-linux-gnueabihf-"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+    env:
+      # Значения по умолчанию для push / PR
+      ARCH: ${{ inputs.arch || 'arm' }}
+      CROSS_COMPILE: ${{ inputs.cross || 'arm-linux-gnueabihf-' }}
+      DEFCONFIG: ${{ inputs.defconfig || 'transformer_t30_defconfig' }}
 
-      - name: Install dependencies
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential bc bison flex \
             libssl-dev libelf-dev \
             device-tree-compiler \
-            gcc-arm-linux-gnueabihf \
-            git make
+            git make \
+            gcc-arm-linux-gnueabihf
 
-      - name: Show toolchain
+      - name: Toolchain info
         run: |
-          which ${{ inputs.cross }}gcc || true
-          ${{ inputs.cross }}gcc --version || true
+          echo "ARCH=$ARCH"
+          echo "CROSS_COMPILE=$CROSS_COMPILE"
+          echo "DEFCONFIG=$DEFCONFIG"
+          which ${CROSS_COMPILE}gcc
+          ${CROSS_COMPILE}gcc --version | head -n 2
+          dtc --version
 
-      - name: Configure
+      - name: Configure U-Boot
         run: |
           make distclean
-          make ARCH=${{ inputs.arch }} CROSS_COMPILE=${{ inputs.cross }} ${{ inputs.defconfig }}
+          make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE $DEFCONFIG
 
-      - name: Build
+      - name: Build U-Boot
         run: |
-          make -j"$(nproc)" ARCH=${{ inputs.arch }} CROSS_COMPILE=${{ inputs.cross }}
+          make -j"$(nproc)" ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
 
       - name: Collect artifacts
         run: |
           mkdir -p out
-          # Часто встречающиеся выходные файлы U-Boot (не все будут существовать для каждой платы)
-          cp -v u-boot  out/ 2>/dev/null || true
+          cp -v u-boot out/ 2>/dev/null || true
           cp -v u-boot.bin out/ 2>/dev/null || true
           cp -v u-boot.img out/ 2>/dev/null || true
           cp -v u-boot-dtb.bin out/ 2>/dev/null || true
-          cp -v spl/u-boot-spl.bin out/ 2>/dev/null || true
-          cp -v MLO out/ 2>/dev/null || true
           cp -v System.map out/ 2>/dev/null || true
           cp -v .config out/ 2>/dev/null || true
-          echo "Artifacts:"
+          cp -v spl/u-boot-spl.bin out/ 2>/dev/null || true
           ls -la out
 
-      - name: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: u-boot-${{ inputs.arch }}-${{ inputs.defconfig }}
+          name: u-boot-transformer-t30
           path: out
           if-no-files-found: warn
