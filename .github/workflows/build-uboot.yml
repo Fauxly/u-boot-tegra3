@@ -8,7 +8,7 @@ on:
       defconfig:
         description: "transformer_t30_defconfig"
         required: true
-        default: "qemu_arm_defconfig"
+        default: "transformer_t30_defconfig"
       arch:
         description: "ARCH"
         required: true
