@@ -67,10 +67,13 @@ jobs:
           cp -v u-boot out/ 2>/dev/null || true
           cp -v u-boot.bin out/ 2>/dev/null || true
           cp -v u-boot.img out/ 2>/dev/null || true
+          cp -v u-boot.dtb out/ 2>/dev/null || true
           cp -v u-boot-dtb.bin out/ 2>/dev/null || true
+          cp -v u-boot-dtb-tegra.bin out/ 2>/dev/null || true
+          cp -v u-boot-tegra.bin out/ 2>/dev/null || true
+          cp -v u-boot-nodtb-tegra.bin out/ 2>/dev/null || true
           cp -v System.map out/ 2>/dev/null || true
           cp -v .config out/ 2>/dev/null || true
-          cp -v spl/u-boot-spl.bin out/ 2>/dev/null || true
           ls -la out
 
       - name: Upload build artifacts
